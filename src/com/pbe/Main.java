@@ -1,5 +1,7 @@
 package com.pbe;
 
+import java.util.Locale;
+
 /** Study on Lambda Expressions
  * Following Java The Complete Reference by Herbert Schildt i.c.w. (Udemy) Java programming masterclass for software developers Tim Buchalka.
  @author Pieter Beernink
@@ -93,6 +95,13 @@ package com.pbe;
 // Instead of having two functional interfaces whose methods differ only in their data types,
 // it is possible to declare one generic interface that can be used to handle both circumstances.
 
+// Passing Lambda expressions as argument
+// Passing a lambda expressions as argument is a common use of lambdas.
+// It provides a way to pass executable code as an argument to a method.
+// The type of the parameter receiving the lambda expression argument must be
+// of a functional interface type compatible with the lambda.
+    
+
 public class Main {
 
     public static void main(String[] args) {
@@ -135,7 +144,7 @@ public class Main {
 
         // Test if a number is even
         int num = 10;
-        if(isEven.test(num)) {
+        if (isEven.test(num)) {
             System.out.println(num + " is even");
         } else {
             System.out.println(num + " is not even");
@@ -149,7 +158,7 @@ public class Main {
         // Note that both this and the previous test can be executed through a MyNumTest reference,
         // because a functional interface reference can be used to execute any lambda expression that is compatible.
         num = 0;
-        if(isEven.test(num)) {
+        if (isEven.test(num)) {
             System.out.println(num + " is non negative");
         } else {
             System.out.println(num + " is negative");
@@ -169,7 +178,7 @@ public class Main {
 
         int num1 = 10;
         int num2 = 2;
-        if(isFactor.test(num1, num2)) {
+        if (isFactor.test(num1, num2)) {
             System.out.println(num2 + " is a factor of " + num1);
         } else {
             System.out.println(num2 + " is not a factor of " + num1);
@@ -184,7 +193,7 @@ public class Main {
         // Block lambda, computing the factorial of an int value
         NumFunc factorial = (n) -> {
             int result = 1;
-            for (int i=1; i <=n; i++)
+            for (int i = 1; i <= n; i++)
                 result = i * result;
             return result; // returns from lambda (does not cause an enclosing method to return)
         };
@@ -199,13 +208,13 @@ public class Main {
         System.out.println("Another block lambda");
 
         // Block lambda that reverses the characters in a String.
+        // The functional interface StringFunc declares the func() method
+        // The func() method takes a parameter of type String and has a return type of String
+        // The type 'str' in the lambda expression is inferred to be a String
         StringFunc reverse = (str) -> {
             String result = "";
-            int i;
-
-            for (i = str.length()-1; i >= 0; i--)
+            for (int i = str.length() - 1; i >= 0; i--)
                 result += str.charAt(i);
-
             return result;
         };
         System.out.println("Lambda reversed is " +
@@ -224,7 +233,7 @@ public class Main {
         // Using String based version of SomeFunc
         SomeFunc<String> reverse2 = (str) -> {
             String result = "";
-            for (int i = str.length()-1; i >= 0; i--)
+            for (int i = str.length() - 1; i >= 0; i--)
                 result += str.charAt(i);
             return result;
         };
@@ -243,5 +252,49 @@ public class Main {
         };
         System.out.println("The factorial of 5 is " + factorial.func(5));
         System.out.println("The factorial of 8 is " + factorial.func(8));
+        System.out.println();
+
+        // **********************
+        // Passing lambda expressions as arguments
+        // **********************
+        System.out.println("Passing a lambda expression as argument");
+
+        String inStr = "More lambda stuff";
+        String outStr;
+
+        System.out.println("Input string: " + inStr);
+
+        // stringOp() is passed an expression lambda that uppercases a string
+        // This triggers the creation of an instance of the functional interface StringFunc
+        // A reference to that object is passed to the first parameter of StringOp()
+        // This way, the lambda code embedded in a class instance is passed to the method
+        // The target type context is determined by the type of the parameter
+        outStr = stringOp((str) -> str.toUpperCase(), inStr);
+        System.out.println("The string in uppercase: " + outStr);
+
+        // stringOp() is passed a block lambda that removes spaces
+        outStr = stringOp((str) -> {
+            String result = "";
+            int i;
+            for (i = 0; i < str.length(); i++)
+                if(str.charAt(i) != ' ')
+                    result += str.charAt(i);
+                return result;
+        }, inStr);
+        System.out.println("Possible spaces have been removed from the given string: " + outStr);
+        System.out.println();
+
+
+
+
+
+    }
+
+    // Method with a functional interface, StringFunc sf, as the type of the first parameter.
+    // It can be passed a reference to any instance of that interface.
+    // Including the instance created by a lambda expression.
+    // The second parameter, s, specifies the String to operate on
+    static String stringOp(StringFunc sf, String s) {
+        return sf.func(s);
     }
 }
