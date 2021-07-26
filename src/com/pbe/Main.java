@@ -1,7 +1,5 @@
 package com.pbe;
 
-import java.util.Locale;
-
 /** Study on Lambda Expressions
  * Following Java The Complete Reference by Herbert Schildt i.c.w. (Udemy) Java programming masterclass for software developers Tim Buchalka.
  @author Pieter Beernink
@@ -100,11 +98,43 @@ import java.util.Locale;
 // It provides a way to pass executable code as an argument to a method.
 // The type of the parameter receiving the lambda expression argument must be
 // of a functional interface type compatible with the lambda.
-    
+
+// Lambda expressions and exceptions
+// A lambda expression can throw an exception.
+// If it throws a checked exception, then it must be compatible with the exception(s)
+// listed in the throws clause of the abstract method in the functional interface.
+
+// Lambda expressions and variable capture
+// Variables defined by the enclosing scope of a lambda expression are accessible within the lambda expression.
+// A lambda expression also has access to 'this' (explicitly & implicitly), which refers to the invoking
+// instance of the lambda expression's enclosing class.
+// A special situation occurs when a lambda expression uses a local variable from its enclosing scope,
+// which is referred to as a 'variable capture'. In such situation, a lambda expression may only use
+// local variables that are effectively final (= a variable whose value does not change after it is first assigned).
+// Noe that a local variable of the enclosing scope cannot be modified by the lambda expression.
+
+// Method references
+// An important feature related to expressions is the 'method reference'.
+// A method reference provides a way to a method without executing it.
+// Like a lambda expression, it requires a target type context that consists of a compatible functional interface.
+// When evaluated, the reference creates an instance of the functional interface.
+// There are different types of method references:
+// 1. A static method reference. Syntax: ClassName::methodName
+// 2. A reference to an instance method on a specific object. Syntax: objRef::methodName
+// 3. A reference to an instance method on a specific class. Syntax: ClassName:instanceMethodName
+// 4. A reference with generic classes and/or generic methods.
+// One place method references can be quite useful is when using the Collections Framework+
+
+// Constructor references
+// T.b.d.
+
+// Predefined Functional Interfaces
+// Package java.util.function provides several predefined functional interfaces:
+// UnaryOperator<T>, BinaryOperator<T>, Consumer<T>, Supplier<T>, Function<T,R>, Predicate<T>
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws EmptyArrayException {
 
         // **********************
         // Simple lambda expression example
@@ -284,10 +314,91 @@ public class Main {
         System.out.println("Possible spaces have been removed from the given string: " + outStr);
         System.out.println();
 
+        // **********************
+        // Lambda expression exceptions example
+        // **********************
+        // Note: this example uses func() in DblNumericArrayFunc
+        // Inclusion of the throws clause in func() is necessary, because without it,
+        // the program would not compile because the lambda expression would no longer be compatible with func().
+        System.out.println("Lambda expression exceptions example");
+        double[] values = { 1.1, 2.2, 3.3, 4.4 };
 
+        // Computing the avg of an array of doubles
+        // Note: simply specifying 'n' although DblNumericArrayFunc func() requires an array
+        // This works, because the type of the lambda expression is inferred from the target context
+        DblNumericArrayFunc avg = (n) -> {
+            double sum = 0;
+            if(n.length == 0)
+                throw new EmptyArrayException();
 
+            for (int i=0; i < n.length; i++)
+                sum += n[i];
 
+            return sum / n.length;
+        };
 
+        System.out.println("The avg is: " + avg.func(values));
+        // The following causes an EmptyArrayException to be thrown
+        // System.out.println("The avg is " + avg.func(new double[0]));
+        System.out.println();
+
+        // **********************
+        // Variable capture
+        // **********************
+        System.out.println("Variable capture");
+        int somevalue = 5; // a local variable that can be captured
+        NumFunc myLambda = (n) -> {
+            int v = somevalue + n; // acceptable use of num because it does not modify num
+            // num++; // illegal use of num because it attempts to modify its value
+            return v;
+        };
+        // num = 9 // also causing an error because it would remove the effectively final status from num
+
+        // **********************
+        // Method reference: static method reference
+        // **********************
+        System.out.println("Method reference: static method reference");
+        inStr = "More lambda stuff";
+        System.out.println("Input string: " + inStr);
+
+        // Passing a method reference to stringOp()
+        // This works because strReverse is compatible with the StringFunc functional interface
+        // MyStringOps::strReverse evaluates to a reference to an object
+        // in which strReverse provides the implementation of func() in StringFunc
+        outStr = stringOp(StaticMyStringOps::strReverse, inStr);
+        System.out.println("Output string: " + outStr + "\n");
+
+        // **********************
+        // Method reference: instance method reference with different objects
+        // **********************
+        System.out.println("Method reference:  instance method reference with different objects");
+        inStr = "More lambda stuff";
+        System.out.println("Input string: " + inStr);
+
+        // Create a MyStringOps object
+        MyStringOps myStringOpsOb = new MyStringOps();
+
+        // Pass a method reference to the instance method strReverse to stringOp()
+        outStr = stringOp(myStringOpsOb::strReverse, inStr);
+        System.out.println("Output string: " + outStr + "\n");
+
+        // **********************
+        // Method reference with generic classes and -methods
+        // **********************
+        System.out.println("Method reference with generic classes and -methods");
+        Integer[] int_array = { 1, 2, 3, 4, 2, 3, 4, 4, 5 };
+        String[] str_array = { "One", "Two", "Three", "Two" };
+
+        // Notice that the passing of type argument Integer occurs after the ::
+        // When a generic method is specified as a method reference, its type argument
+        // comes after the :: and before the method name
+        // In this situation, explicitly specifying the type argument is actually not required
+        // because the type argument can be automatically inferred
+        int count = myOp(MyArrayOps::<Integer>countMatching, int_array, 4);
+        System.out.println("int_array contains: " + count + " 4s");
+
+        count = myOp(MyArrayOps::<String>countMatching, str_array, "Two");
+        System.out.println("int_array contains: " + count + " Twos" + "\n");
     }
 
     // Method with a functional interface, StringFunc sf, as the type of the first parameter.
@@ -296,5 +407,11 @@ public class Main {
     // The second parameter, s, specifies the String to operate on
     static String stringOp(StringFunc sf, String s) {
         return sf.func(s);
+    }
+
+    // Method with MyFunc functional interface as the type of its first parameter
+    // The other two parameters receive an array and a value, both of Type T
+    static <T> int myOp(MyFunc<T> f, T[] vals, T v) {
+        return f.func(vals, v);
     }
 }
